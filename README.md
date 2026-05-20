@@ -1,85 +1,3 @@
-mkdir uat-screenshots && cd uat-screenshots
-npm init -y
-npm install -D @playwright/test typescript
-npx playwright install chromium
-
-
-export type Target = {
-  label: string;        // shown in the report
-  url: string;          // full URL of the page
-  selector: string;     // element to screenshot (from codegen)
-  filename: string;     // image filename (no extension)
-};
-
-export const targets: Target[] = [
-  {
-    label: 'Homepage Hero Banner',
-    url: 'https://www.rockdalefcu.org/',
-    selector: '.hero-banner',  // replace with real selector from codegen
-    filename: 'home-hero',
-  },
-  {
-    label: 'Auto Loan Rates Table',
-    url: 'https://www.rockdalefcu.org/rates',
-    selector: '.rates-table',
-    filename: 'auto-loan-rates',
-  },
-  // add one entry per changed section
-];
-
-
-
-
-
-import { chromium } from '@playwright/test';
-import { targets } from '../config/targets';
-import * as fs from 'fs';
-import * as path from 'path';
-
-async function capture() {
-  const mode = process.argv[2]; // 'before' or 'after'
-  if (mode !== 'before' && mode !== 'after') {
-    console.error('Usage: ts-node scripts/capture.ts <before|after>');
-    process.exit(1);
-  }
-
-  const outDir = path.join('screenshots', mode);
-  fs.mkdirSync(outDir, { recursive: true });
-
-  const browser = await chromium.launch();
-  const context = await browser.newContext({
-    viewport: { width: 1440, height: 900 },
-  });
-  const page = await context.newPage();
-
-  for (const target of targets) {
-    console.log(`Capturing ${target.label}...`);
-    try {
-      await page.goto(target.url, { waitUntil: 'networkidle' });
-      const element = page.locator(target.selector).first();
-      await element.waitFor({ state: 'visible', timeout: 10000 });
-      await element.screenshot({
-        path: path.join(outDir, `${target.filename}.png`),
-      });
-      console.log(`  ✓ Saved ${target.filename}.png`);
-    } catch (err) {
-      console.error(`  ✗ Failed: ${target.label} — ${(err as Error).message}`);
-    }
-  }
-
-  await browser.close();
-  console.log(`\nDone. Screenshots saved to ${outDir}/`);
-}
-
-capture();
-
-
-
-
-
-
-
-
 import { targets } from '../config/targets';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -145,10 +63,6 @@ generateReport();
 
 
 
-
-
-
-
 {
   "scripts": {
     "capture:before": "npx ts-node scripts/capture.ts before",
@@ -156,9 +70,6 @@ generateReport();
     "report": "npx ts-node scripts/report.ts"
   }
 }
-
-
-
 
 
 
@@ -171,12 +82,3 @@ generateReport();
     "skipLibCheck": true
   }
 }
-
-
-
-
-
-
-
-
-
