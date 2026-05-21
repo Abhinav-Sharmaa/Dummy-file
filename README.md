@@ -1,10 +1,3 @@
-"clients": {
-  "FIRE FIGHTERS C": {
-    "preview_url":    "https://firefighterscu.vbwebservices.com/",
-    "production_url": "https://firefighterscu.vbwebservices.com/"
-  },
-  "DEFAULT": {
-    "preview_url":    "https://example.com",
-    "production_url": "https://example.com"
-  }
-}
+node scripts/03_screenshot.js IP30186951 preview after
+node scripts/05_diff.js IP30186951 preview
+node scripts/04_generate_uat.js IP30186951
