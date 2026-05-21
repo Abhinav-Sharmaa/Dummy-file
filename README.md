@@ -1,2 +1,10 @@
-node scripts/run_pipeline.js intake "C:\path\to\your\fiserv_export.xlsx"
-node scripts/03_screenshot.js <one-real-inquiry-number> preview before
+"clients": {
+  "FIRE FIGHTERS C": {
+    "preview_url":    "https://firefighterscu.vbwebservices.com/",
+    "production_url": "https://firefighterscu.vbwebservices.com/"
+  },
+  "DEFAULT": {
+    "preview_url":    "https://example.com",
+    "production_url": "https://example.com"
+  }
+}
