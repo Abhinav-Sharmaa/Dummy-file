@@ -1,20 +1,4 @@
-"USI Federal Credit Union": {
-  "preview_url": "https://usifcu.vbwebservices.com/",
-  "production_url": "https://www.usifcu.org/"
-},
-"MEDISYS EMPLOYEES FEDERAL CREDIT UNION": {
-  "preview_url": "https://medisysempfcu.vbwebservices.com/",
-  "production_url": "https://www.medisysempfcu.org/"
-},
-"KOREAN AMERICAN CATHOLICS FEDERAL CREDIT UNION": {
-  "preview_url": "https://kacfcu.vbwebservices.com/",
-  "production_url": "https://www.kacfcu.org/"
-},
-"Two Harbors Federal Credit Union": {
-  "preview_url": "https://twoharborsfcu.vbwebservices.com/",
-  "production_url": "https://www.twoharborsfcu.org/"
-},
-"RIVERTRUST FEDERAL CREDIT UNION": {
-  "preview_url": "https://rivertrustfcu.vbwebservices.com/",
-  "production_url": "https://www.rivertrustfcu.org/"
-}
+https://claude.ai/public/artifacts/dca58a8a-8936-4f9e-9da2-cd362f912470
+
+
+https://claude.ai/public/artifacts/e8aba7d1-6854-44e4-b840-2a4942ab3196
