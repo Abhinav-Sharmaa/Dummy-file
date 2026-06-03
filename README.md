@@ -1,6 +1,1 @@
-## Core behavior
-- POINT OUT problems. Do NOT rewrite code unless I say "fix it" or "rewrite it".
-- Output format per issue: `file:line — problem (one line)`. Add a one-line "why" only if non-obvious.
-- Group findings: Bugs → Refactor → Optional.
-- Skip stylistic preferences (casing of keywords, quote style, etc.) unless they affect behavior.
-- No preamble, no summaries, no closing remarks.
+Reformat this portrait flyer into a landscape 888x494 pixel layout (roughly 16:9). Rearrange the existing elements into a horizontal composition: place the “COWLITZ COUNTY FAIR” banner and title on the left side, the date/location/free entry details in the center, and the carousel illustration on the right. Keep the bunting flags across the top and the green grass strip across the bottom with the website and phone number. Preserve ALL text exactly as written: “COWLITZ COUNTY FAIR”, “WEDNESDAY JULY 22 – SATURDAY JULY 25, 2026”, the Longview WA 98632 address, “FREE ENTRY”, the discounted ride vouchers paragraph, and “www.lclfcu.org or call 360-423-2770”. Maintain the same light blue sky background, cheerful color palette, clouds, flowers, and carousel illustration style. Do not alter, rephrase, or regenerate any text.
