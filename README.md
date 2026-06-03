@@ -1,33 +1,34 @@
 Reformat this flyer into a [WIDTH] x [HEIGHT] pixel layout.
 
 Auto-arrange the existing elements to fit the new aspect ratio while keeping 
-the design balanced and uncluttered. Adapt the composition naturally:
-- If wider than tall: spread elements horizontally (title left, text center, 
-  rides right)
-- If taller than wide: stack elements vertically (title top, text middle, 
-  rides bottom)
-- If square: balance elements in quadrants
+the design balanced, uncluttered, and visually appealing. Adapt the 
+composition naturally based on the target shape:
+- Wider than tall → spread elements horizontally across left, center, and right
+- Taller than wide → stack elements vertically from top to bottom
+- Square → balance elements evenly across the canvas
 
-PRESERVE EXACTLY — do not alter, rephrase, or regenerate any text:
-- "COWLITZ COUNTY FAIR"
-- "WEDNESDAY JULY 22 – SATURDAY JULY 25, 2026"
-- "1900 7TH AVENUE LONGVIEW, WA 98632"
-- "FREE ENTRY"
-- "DISCOUNTED RIDE VOUCHERS AVAILABLE AT THE CREDIT UNION FOR YOUTH MEMBERS 
-   17 & UNDER. CAN BE REDEEMED ONCE ANY DAY DURING THE FAIR"
-- "For more information visit: www.lclfcu.org or call 360-423-2770"
+PRESERVE EVERYTHING FROM THE ORIGINAL:
+- Keep ALL text exactly as written — do not alter, rephrase, translate, 
+  shorten, regenerate, or add any text. Preserve punctuation, capitalization, 
+  numbers, dates, URLs, phone numbers, and addresses character-for-character.
+- Keep ALL illustrations, icons, logos, decorative elements, borders, 
+  ribbons, and background graphics from the original.
+- Keep the original color palette, typography style, and overall mood.
 
-KEEP ALL ORIGINAL ELEMENTS:
-- Orange "COWLITZ COUNTY FAIR" ribbon banner
-- Carousel with horses
-- Ferris wheel
-- White clouds and daisy flowers
-- Colorful triangle bunting flags along the top edge
-- Green grass strip along the bottom edge with footer text
-- Light blue sky background
-- Red "FREE ENTRY" ribbon button
+LAYOUT RULES:
+- Maintain clear visual hierarchy (title most prominent, body text readable, 
+  footer/contact info smallest)
+- Group related elements together (don't scatter illustrations)
+- Keep decorative borders/headers/footers spanning the full width if they 
+  existed in the original
+- Ensure all text is fully visible, never cropped, never overlapping 
+  illustrations
+- Maintain comfortable padding around edges
+- Background should extend naturally to fill the new canvas
 
-STYLE: flat vector illustration, cheerful, red/orange/green/sky-blue palette. 
-Ensure all text is fully visible, never cropped, and readable. Do not add 
-new text or elements.
-
+DO NOT:
+- Add new text, labels, watermarks, or elements not in the original
+- Remove any text or illustrations
+- Change colors, fonts, or illustration style
+- Crop, cut off, or obscure any text
+- Translate or "improve" any wording
