@@ -1,1 +1,1 @@
-Get-Content "C:\Users\F9LSIN1\.copilot\hooks\Session report.json" | Select-String '"'
+Get-Content "C:\Users\F9LSIN1\.copilot\hooks\Session report.json" -Raw | ConvertFrom-Json
