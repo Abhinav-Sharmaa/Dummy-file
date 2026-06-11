@@ -1,147 +1,190 @@
------
+#!/usr/bin/env python3
+"""
+image_tools.py — High-quality image creation & resizing (Pillow).
 
-name: client-changelog-writer
-description: Converts commits, diffs, and pull requests into plain-language, client-facing change summaries. Use after finishing work on a client website change request to draft the ticket reply or email explaining what changed.
+Quality features:
+  * LANCZOS resampling (sharpest, cleanest scaling filter)
+  * Auto EXIF rotation fix (phone photos come out the right way up)
+  * Gentle unsharp-mask after downscaling to restore crispness
+  * Max-quality save settings per format (JPEG q95 / no chroma subsampling,
+    optimized PNG, WebP method 6)
+  * Band-free smooth gradients and anti-aliased TrueType text
 
-# tools: [“read”, “search”, “shell”]   # Optional. Omit to allow all tools (the default).
+Install:  pip install Pillow
 
-```
-                                   # Tool names vary slightly between VS Code, CLI, and
-                                   # the cloud agent — check your surface before pinning.
-```
+Usage:
+  python image_tools.py create out.png -W 1280 -H 720 --color1 "#0f2027" --color2 "#2c5364" --text "Hello"
+  python image_tools.py resize photo.jpg small.jpg -W 800                 # keep aspect ratio
+  python image_tools.py resize photo.jpg square.jpg -W 500 -H 500 --mode fill
+"""
 
-# mcp-servers:                         # Optional. Add your ticketing system’s MCP server here
+import argparse
+from PIL import Image, ImageDraw, ImageFilter, ImageFont, ImageOps
 
-```
-                                   # if you want the agent to read the original client
-                                   # request or post the draft back to the ticket.
-```
+LANCZOS = getattr(Image, "Resampling", Image).LANCZOS
 
------
+# ──────────────────────────── CREATION ────────────────────────────
 
-# Client Changelog Writer
-
-You translate technical website changes into clear, non-technical summaries that a web
-hosting team sends to its clients. The codebases you work in are HTML, CSS, JavaScript,
-Bootstrap, and PHP. Your readers are small-business owners with no technical background.
-
-## Inputs
-
-You will be given one of: a branch name, a commit range, a pull request, or a description
-of the work just completed. If none is specified, ask which changes to summarize — never
-guess. If the original client request (ticket text) is available, frame the summary around
-what the client asked for.
-
-## Process
-
-1. **Gather the changes.** Use git history and diffs (`git log`, `git diff`) or the pull
-   request’s commits and description to see exactly what changed. Do not rely on memory
-   of the session.
-1. **Classify each change** as client-visible (layout, text, images, menus, forms,
-   mobile/tablet behavior, speed) or invisible (refactors, dependency updates,
-   server-side fixes).
-1. **Translate to client language.** If the `client-voice` skill is available, follow it
-   for tone and phrasing. Describe the visible effect, never the implementation.
-1. **Draft the summary** using the output template below.
-
-## Translation rules
-
-- No jargon: no file names, class names, function names, or terms like “navbar”,
-  “breakpoint”, “media query”, “include”, “merge”, “deploy”, “CSS”, “PHP”, “Bootstrap”.
-- Describe what the client will see or experience: “the menu now displays correctly on
-  tablets”, not “fixed the navbar collapse breakpoint”.
-- Common translations for this stack:
-  - navbar → navigation menu
-  - hero / jumbotron → main banner at the top of the page
-  - Bootstrap grid / columns → page layout
-  - media query / breakpoint fix → how the site displays on phones and tablets
-  - form handler / PHP mailer → what happens when someone submits the form
-  - modal → pop-up window
-  - footer include → the bottom section that appears on every page
-- Collapse purely internal changes into one line: “We also did some behind-the-scenes
-  maintenance to keep your site running smoothly.”
-- Security fixes: say “we applied a security improvement” — never describe the
-  vulnerability, the affected file, or how it could be exploited.
-
-## Never include
-
-- Internal file paths, server names, database details, or credentials
-- Developer names, internal notes, or commit messages verbatim
-- Mentions of bugs the team introduced and fixed during the same job
-
-## Output template
-
-Produce the summary ready to paste into a ticket reply or email:
-
-**Subject:** [Site name] — your requested updates are complete
-
-**What we changed**
-
-- One bullet per client-visible change, in plain language
-
-**What you’ll notice**
-
-- Where on the site to look, and what now looks or behaves differently
-
-**Anything we need from you**
-
-- Review requests, content the client still owes, approvals — or
-  “Nothing — these changes are live.”
-
-Tone: warm, professional, confident, 8th-grade reading level. No marketing fluff.
-No apologies unless the work fixed an error on our side.
-
-## Edge cases
-
-- Very large diffs: summarize at the feature level rather than listing every change.
-- Purely internal work: lead with “Your site will look and behave the same as before”
-  and explain the maintenance value in one sentence.
-- Changes that alter appearance: suggest the client review the affected pages and
-  include a placeholder for the preview link: [staging link].
+def create_solid(width, height, color="white"):
+    """Plain canvas in any color name or hex value."""
+    return Image.new("RGB", (width, height), color)
 
 
------
+def create_gradient(width, height, color1, color2, vertical=True):
+    """Smooth linear gradient with no banding (built 1px wide, LANCZOS-scaled)."""
+    c1 = Image.new("RGB", (1, 1), color1).getpixel((0, 0))
+    c2 = Image.new("RGB", (1, 1), color2).getpixel((0, 0))
+    steps = height if vertical else width
+    strip = Image.new("RGB", (1, steps) if vertical else (steps, 1))
+    px = strip.load()
+    for i in range(steps):
+        t = i / max(steps - 1, 1)
+        col = tuple(round(a + (b - a) * t) for a, b in zip(c1, c2))
+        px[(0, i) if vertical else (i, 0)] = col
+    return strip.resize((width, height), LANCZOS)
 
-## name: client-voice
-description: House style for client-facing writing at a web hosting company. Use whenever drafting anything a client will read — change summaries, ticket replies, emails about website work, maintenance notices, downtime explanations, or any translation of technical work into plain language — even if the request doesn’t mention “changelog” or “client” explicitly.
 
-# Client Voice
+def add_text(img, text, size=48, color="white", position="center", font_path=None):
+    """Anti-aliased text; tries real TrueType fonts before the bitmap fallback."""
+    draw = ImageDraw.Draw(img)
+    font = None
+    candidates = ([font_path] if font_path else []) + [
+        "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
+        "DejaVuSans-Bold.ttf",
+        "arialbd.ttf",
+        "arial.ttf",
+    ]
+    for cand in candidates:
+        try:
+            font = ImageFont.truetype(cand, size)
+            break
+        except (OSError, TypeError):
+            continue
+    if font is None:
+        font = ImageFont.load_default()
 
-How we talk to website clients. Most of our clients are small-business owners with no
-technical background. They care about three things: what changed, what it means for
-their business, and whether they need to do anything.
+    bbox = draw.textbbox((0, 0), text, font=font)
+    tw, th = bbox[2] - bbox[0], bbox[3] - bbox[1]
+    if position == "center":
+        xy = ((img.width - tw) // 2 - bbox[0], (img.height - th) // 2 - bbox[1])
+    else:
+        xy = position
+    draw.text(xy, text, font=font, fill=color)
+    return img
 
-## Tone
+# ──────────────────────────── RESIZING ────────────────────────────
 
-- Warm and professional — like a helpful account manager, not a developer or a lawyer.
-- Confident. Say “we fixed”, not “we attempted to fix” or “this should hopefully”.
-- Plain English at an 8th-grade reading level. Short sentences, short paragraphs.
-- Lead with the outcome, not the effort. Clients don’t need to know it was hard.
+def load(path):
+    """Open an image and apply EXIF orientation so it isn't sideways."""
+    return ImageOps.exif_transpose(Image.open(path))
 
-## Before / after examples
 
-|Don’t write                                                 |Write instead                                                              |
-|------------------------------------------------------------|---------------------------------------------------------------------------|
-|Refactored the navbar partial and adjusted the lg breakpoint|We fixed the navigation menu so it displays correctly on tablets.          |
-|Patched an XSS vulnerability in contact.php                 |We applied a security improvement to your contact form.                    |
-|Updated Bootstrap 4.6 → 5.3 and resolved conflicts          |We upgraded the framework your site is built on to keep it fast and secure.|
-|Swapped hero img and h1 per ticket #4821                    |We added your new banner image and updated the headline on the homepage.   |
-|Optimized images and enabled caching                        |We made your site load faster, especially on mobile.                       |
+def resize_fit(img, width, height=None):
+    """Fit inside the box — aspect ratio preserved, never cropped or distorted."""
+    if height is None:
+        height = round(img.height * width / img.width)
+        out = img.resize((width, height), LANCZOS)
+    else:
+        out = ImageOps.contain(img, (width, height), LANCZOS)
+    return _crispen(img, out)
 
-## Words to avoid → use instead
 
-- deploy / push live → publish, make live
-- repo / codebase → your website’s files
-- bug → issue
-- backend / server-side → behind the scenes
-- responsive → how the site displays on phones and tablets
+def resize_fill(img, width, height):
+    """Fill the box exactly — aspect preserved, overflow center-cropped (CSS 'cover')."""
+    out = ImageOps.fit(img, (width, height), LANCZOS, centering=(0.5, 0.5))
+    return _crispen(img, out)
 
-## Email closing template
 
-> These changes are now live on your site. Take a look when you have a moment, and
-> reply here if anything doesn’t look the way you expected — we’re happy to adjust.
+def resize_exact(img, width, height):
+    """Force exact dimensions (may stretch/squash)."""
+    return _crispen(img, img.resize((width, height), LANCZOS))
 
-For changes awaiting client review, swap the first sentence for:
 
-> These changes are ready for you to preview at [staging link].
-> 
+def resize_pad(img, width, height, bg="white"):
+    """Fit inside the box, then pad with a background color to the exact size."""
+    return ImageOps.pad(img, (width, height), LANCZOS, color=bg)
+
+
+def _crispen(original, out):
+    """Subtle unsharp mask only when downscaling — restores fine detail."""
+    if out.width < original.width or out.height < original.height:
+        return out.filter(ImageFilter.UnsharpMask(radius=1.2, percent=80, threshold=2))
+    return out
+
+
+def smart_save(img, path, quality=95):
+    """Save with the best-quality settings for the target format."""
+    ext = path.lower().rsplit(".", 1)[-1]
+    if ext in ("jpg", "jpeg"):
+        if img.mode in ("RGBA", "LA", "P"):
+            img = img.convert("RGB")
+        img.save(path, quality=quality, optimize=True, subsampling=0, progressive=True)
+    elif ext == "png":
+        img.save(path, optimize=True)
+    elif ext == "webp":
+        img.save(path, quality=quality, method=6)
+    else:
+        img.save(path)
+
+# ──────────────────────────────── CLI ────────────────────────────────
+
+def main():
+    p = argparse.ArgumentParser(description="High-quality image creation & resizing")
+    sub = p.add_subparsers(dest="cmd", required=True)
+
+    c = sub.add_parser("create", help="create a new image")
+    c.add_argument("output")
+    c.add_argument("-W", "--width", type=int, default=1280)
+    c.add_argument("-H", "--height", type=int, default=720)
+    c.add_argument("--color1", default="#1e3c72", help="fill / gradient start")
+    c.add_argument("--color2", help="gradient end (omit for solid color)")
+    c.add_argument("--horizontal", action="store_true", help="horizontal gradient")
+    c.add_argument("--text", help="optional centered caption")
+    c.add_argument("--text-size", type=int)
+    c.add_argument("--text-color", default="white")
+
+    r = sub.add_parser("resize", help="resize an existing image")
+    r.add_argument("input")
+    r.add_argument("output")
+    r.add_argument("-W", "--width", type=int, required=True)
+    r.add_argument("-H", "--height", type=int, help="omit to keep aspect from width")
+    r.add_argument("--mode", choices=["fit", "fill", "exact", "pad"], default="fit")
+    r.add_argument("--bg", default="white", help="padding color for --mode pad")
+    r.add_argument("--quality", type=int, default=95, help="JPEG/WebP quality")
+
+    a = p.parse_args()
+
+    if a.cmd == "create":
+        if a.color2:
+            img = create_gradient(a.width, a.height, a.color1, a.color2,
+                                  vertical=not a.horizontal)
+        else:
+            img = create_solid(a.width, a.height, a.color1)
+        if a.text:
+            add_text(img, a.text, a.text_size or max(24, a.width // 12), a.text_color)
+        smart_save(img, a.output)
+        print(f"Created {a.output} ({img.width}x{img.height})")
+    else:
+        img = load(a.input)
+        h = a.height or round(img.height * a.width / img.width)
+        if a.mode == "fit":
+            out = resize_fit(img, a.width, a.height)
+        elif a.mode == "fill":
+            out = resize_fill(img, a.width, h)
+        elif a.mode == "exact":
+            out = resize_exact(img, a.width, h)
+        else:
+            out = resize_pad(img, a.width, h, a.bg)
+        smart_save(out, a.output, a.quality)
+        print(f"Saved {a.output} ({out.width}x{out.height}, mode={a.mode})")
+
+
+if __name__ == "__main__":
+    main()
+
+
+
+python image_tools.py create test.png -W 1280 -H 720 --color1 "#0f2027" --color2 "#2c5364" --text "Hello"
+
+
+python image_tools.py resize test.png small.jpg -W 800
