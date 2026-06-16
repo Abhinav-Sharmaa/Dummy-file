@@ -207,6 +207,35 @@ def _fit_title(d, title, max_w, H):
     return [(title, _font(int(H * 0.10), bold=True))]
 
 
+def _wrap(d, text, font, max_w):
+    """Greedy word-wrap into lines that each fit within max_w."""
+    lines, cur = [], ""
+    for w in text.split():
+        trial = f"{cur} {w}".strip()
+        if not cur or d.textlength(trial, font=font) <= max_w:
+            cur = trial
+        else:
+            lines.append(cur)
+            cur = w
+    if cur:
+        lines.append(cur)
+    return lines
+
+
+def _fit_subtitle(d, text, max_w, H, max_lines=2):
+    """Shrink the subtitle until it wraps to at most max_lines lines that fit."""
+    size = int(H * 0.085)
+    floor = int(H * 0.05)
+    while size >= floor:
+        f = _font(size)
+        lines = _wrap(d, text, f, max_w)
+        if len(lines) <= max_lines:
+            return lines, f
+        size = int(size * 0.92)
+    f = _font(floor)
+    return _wrap(d, text, f, max_w)[:max_lines], f
+
+
 def make_banner(btype, title, subtitle=None, width=1500, height=500, badge=None,
                 bg=None, tint=0.55, overrides=None, show_badge=True, cta=None):
     """Render a styled banner at 2x then downscale for crisp anti-aliasing.
@@ -255,7 +284,6 @@ def make_banner(btype, title, subtitle=None, width=1500, height=500, badge=None,
     lgap = int(H * 0.02)
 
     title_lines = _fit_title(d, title, W - 2 * x, H)
-    sub_font = _font(int(H * 0.085))
     badge_font = _font(int(H * 0.055), bold=True)
     ppx, ppy = int(H * 0.032), int(H * 0.018)
 
@@ -275,8 +303,12 @@ def make_banner(btype, title, subtitle=None, width=1500, height=500, badge=None,
     title_h = sum(m[3] for m in metrics) + lgap * (len(metrics) - 1)
 
     if subtitle:
-        sb = d.textbbox((0, 0), subtitle, font=sub_font)
-        sth = sb[3] - sb[1]
+        sub_lines, sub_font = _fit_subtitle(d, subtitle, W - 2 * x, H)
+        smetrics = []
+        for line in sub_lines:
+            sbb = d.textbbox((0, 0), line, font=sub_font)
+            smetrics.append((line, sbb, sbb[3] - sbb[1]))
+        sub_h = sum(m[2] for m in smetrics) + lgap * (len(smetrics) - 1)
 
     if cta:
         cta_font = _font(int(H * 0.075), bold=True)
@@ -290,7 +322,7 @@ def make_banner(btype, title, subtitle=None, width=1500, height=500, badge=None,
     if badge_text:
         block += pill_h + gap
     if subtitle:
-        block += gap + sth
+        block += gap + sub_h
     if cta:
         block += cta_gap + btn_h
 
@@ -310,9 +342,11 @@ def make_banner(btype, title, subtitle=None, width=1500, height=500, badge=None,
 
     if subtitle:
         y += gap
-        d.text((x - sb[0], y - sb[1]), subtitle, font=sub_font,
-               fill=style["subtitle_color"])
-        y += sth
+        for line, sbb, sh_ in smetrics:
+            d.text((x - sbb[0], y - sbb[1]), line, font=sub_font,
+                   fill=style["subtitle_color"])
+            y += sh_ + lgap
+        y -= lgap
 
     if cta:
         y += cta_gap
@@ -535,6 +569,20 @@ def smart_save(img, path, quality=95):
 
 # ──────────────────────────── INTERACTIVE ────────────────────────────
 
+def _parse_size(s):
+    """Accept web/social/square/hero, or WxH in forms like 1200x400,
+    1200X400, 1200 x 400, 1200 by 400, 1920×840. Falls back to web."""
+    s = s.strip().lower().replace("×", "x").replace("*", "x").replace(" by ", "x")
+    s = s.replace(" ", "")
+    if s in PRESETS:
+        return PRESETS[s], s
+    if "x" in s:
+        parts = s.split("x")
+        if len(parts) == 2 and parts[0].isdigit() and parts[1].isdigit():
+            return (int(parts[0]), int(parts[1])), f"{parts[0]}x{parts[1]}"
+    return PRESETS["web"], "web (couldn't read that size)"
+
+
 def _is_na(v):
     """Treat NA / N/A / none / - / blank as 'skip this item'."""
     return v.strip().lower() in ("na", "n/a", "none", "-", "")
@@ -614,18 +662,9 @@ def banner_wizard():
         bg = (pick_stock_background(query, 1) if os.environ.get("ADOBE_STOCK_API_KEY")
               else fetch_via_browser(query))
 
-    size = _ask("Size [web/social/square/hero] or WxH (e.g. 1200x400)", "web").lower()
-    if size in PRESETS:
-        width, height = PRESETS[size]
-    elif "x" in size:
-        try:
-            w, h = size.split("x")
-            width, height = int(w), int(h)
-        except ValueError:
-            print("  Couldn't read that size — using web (1500x500).")
-            width, height = PRESETS["web"]
-    else:
-        width, height = PRESETS["web"]
+    size_in = _ask("Size [web/social/square/hero] or WxH (e.g. 1200x400)", "web")
+    (width, height), label = _parse_size(size_in)
+    print(f"  -> {width} x {height}")
 
     out = _ask("Output filename", "banner.png")
     if not out.lower().endswith((".png", ".jpg", ".jpeg", ".webp")):
