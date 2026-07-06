@@ -1,3 +1,9 @@
-Expand-Archive "$env:USERPROFILE\Downloads\php-8*-nts-*-x64.zip" "$env:USERPROFILE\php"
+dir $env:USERPROFILE\php\php.exe
+
+
 setx PATH "$env:PATH;$env:USERPROFILE\php"
+
+
+cd C:\Users\F9LSIN1\site-template-generator
+npm run validate
 
