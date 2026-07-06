@@ -1,1 +1,3 @@
-Open and inspect the screenshots in capture/ before building.” Agent mode can read workspace files itself
+Expand-Archive "$env:USERPROFILE\Downloads\php-8*-nts-*-x64.zip" "$env:USERPROFILE\php"
+setx PATH "$env:PATH;$env:USERPROFILE\php"
+
