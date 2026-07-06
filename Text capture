@@ -1,1 +1,24 @@
-[Environment]::SetEnvironmentVariable("Path", [Environment]::GetEnvironmentVariable("Path","User") + ";$env:APPDATA\npm", "User")
+var secEls = rawKids.slice();
+for (var pass = 0; pass < 4; pass++) {
+  var expanded = false;
+  var next = [];
+  secEls.forEach(function (c) {
+    var r = c.getBoundingClientRect();
+    var tag = c.tagName;
+    var tallKids = Array.prototype.filter.call(c.children, function (cc) {
+      var cs2 = getComputedStyle(cc);
+      if (cs2.display === 'none') return false;
+      return cc.getBoundingClientRect().height >= 120;
+    });
+    if ((tag === 'MAIN' || tag === 'DIV') && tallKids.length >= 2 &&
+        r.height > window.innerHeight * 0.9) {
+      tallKids.forEach(function (cc) { next.push(cc); });
+      expanded = true;
+    } else {
+      next.push(c);
+    }
+  });
+  secEls = next;
+  if (!expanded) break;
+}
+
