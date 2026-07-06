@@ -1,9 +1,5 @@
-dir $env:USERPROFILE\php\php.exe
-
-
-setx PATH "$env:PATH;$env:USERPROFILE\php"
-
-
-cd C:\Users\F9LSIN1\site-template-generator
-npm run validate
-
+Fix these fidelity deltas in template/ (keep everything else):
+1. Home section 0 (navbar): original has a 140px max heading in the header; generated has none. Check home-desktop.png — add the matching large brand/title text at 140px.
+2. Home section 1 (hero): 2 columns on desktop, currently 1. Match column split from tokens.json.
+3. Footer (both pages): height 808px, currently 565 — add the missing rows/padding. Set background to #ffffff (currently #c9e0f0).
+4. Mobile scores are 70–80: compare 375px rendering against home-mobile.png / secondary-mobile.png and fix stacking/section heights.
