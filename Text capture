@@ -1,3 +1,2 @@
-Two fixes in template/, nothing else:
-1. Navbar height is 157px on both pages; original is 128px. Reduce padding/logo size to hit 128px.
-2. The 140px heading was added to the shared navbar partial, so it now shows on contact.php too — original only has it on the home page. Make it home-only (render conditionally or move out of the partial).
+npm run validate -- --threshold=90     → exits 0, PASS
+php -S localhost:8000 -t template      → browser review
