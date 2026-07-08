@@ -1,2 +1,5 @@
-npm run validate -- --threshold=90     → exits 0, PASS
-php -S localhost:8000 -t template      → browser review
+del /Q C:\Users\F9LSIN1\automation\qa-autotest\data\runs\*.*
+set NODE_TLS_REJECT_UNAUTHORIZED=
+cd C:\Users\F9LSIN1\automation\qa-autotest
+php -S 127.0.0.1:8000 -t public
+
