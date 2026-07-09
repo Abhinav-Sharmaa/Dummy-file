@@ -1,5 +1,13 @@
-del /Q C:\Users\F9LSIN1\automation\qa-autotest\data\runs\*.*
-set NODE_TLS_REJECT_UNAUTHORIZED=
-cd C:\Users\F9LSIN1\automation\qa-autotest
-php -S 127.0.0.1:8000 -t public
+Meridith — here's what to send the client. Their developer can run through it in about 15 minutes:
 
+1. Verify the popup's embed URL. In the site's page source, locate the login iframe (search for "tethered" or "financial-net"). It should be exactly:
+https://familyhorizons-dn.financial-net.com/idp/9D1CEF9D/tethered
+If it's an older or different URL format, update it to this — that alone may resolve the issue.
+
+2. Test that URL directly. Paste the full URL above into Safari's address bar on an iPhone or iPad (not through the popup).
+- If the login page renders → the problem is in how the site embeds it, and switching the button to a direct link fixes it.
+- If the same "tethered" download prompt appears → screenshot it. That's the exact evidence needed to escalate to Fiserv's technical team.
+
+3. Optional shortcut: tap Download once and open the "tethered" file in the Files app — its contents are the server's actual response and usually identify the failure outright.
+
+4. Immediate fix for members either way: point the Home Banking Login button directly at https://familyhorizons-dn.financial-net.com/web (opening in a new tab) instead of the embedded popup. Members can log in today while the root cause gets sorted.
