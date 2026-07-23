@@ -1,9 +1,1 @@
-Meridith — found the root cause, and it's fixable on the website. It's not Fiserv.
-
-The login iframe on their page is set to lazy-load. The real Fiserv URL sits in data-src, and the actual src is "about:blank," with class="lazyload" and data-load-mode="0". A lazy-load script is supposed to swap the real URL into src when the iframe comes into view. On desktop that script fires and the login loads. On mobile Safari/Chrome it doesn't fire reliably, so src stays about:blank and members get a blank white box. When it does partially trigger on mobile, loading the tethered endpoint that way is what throws the "download tethered" prompt. That's why the same URL works on desktop but breaks on phones — device behavior, not a Fiserv config difference (which is also why other CUs with correct embeds are fine).
-
-The issue: lazy loading on a login iframe. Login forms should never be lazy-loaded — they need to load immediately.
-
-The fix (their web team, ~15 min): remove lazy loading from this iframe — drop class="lazyload" and data-load-mode, remove src="about:blank", and put the real URL directly in src instead of data-src. The lazyload behavior is almost certainly coming from an optimization plugin (WP Rocket / LiteSpeed / Perfmatters / Autoptimize) — easiest path is to exclude this iframe from lazy loading in the plugin settings, or add the plugin's skip class.
-
-Bottom line for the client: the failure is their website's lazy-load on the login iframe not firing on mobile — not Fiserv, not their hosting. Once lazy loading is removed from that iframe, it'll render on all devices. Happy to walk their developer through it.
+Quick note on sequencing: we’re adding these 6 records in two steps. The first 3 (CNAMEs) are standard for every Emma account, so we’re setting those up right away — nothing needed from you there. The 4th record needs a unique verification code tied specifically to your Emma account (found under Account → DKIM tab), which is why we need Nick (or you) to confirm it. Once we have that code, we’ll add the last record and run Emma’s validation check.
